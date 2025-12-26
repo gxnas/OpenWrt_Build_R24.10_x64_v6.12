@@ -218,7 +218,7 @@ jobs:
         echo "🧱 固件源码: ${{ env.REPO_URL }} " >> release.txt
         echo "💝 源码分支: ${{ env.REPO_BRANCH }} " >> release.txt
         echo "🚀 内核版本: ${{ env.KERNEL }} " >> release.txt
-        echo "🌐 默认地址：192.168.1.11 " >> release.txt
+        echo "🌐 默认地址：192.168.18.1 " >> release.txt
         echo "🧑‍💼 默认账号：root " >> release.txt
         echo "🔑 默认密码：无密码 " >> release.txt
         echo "----------------------------------------" >> release.txt
