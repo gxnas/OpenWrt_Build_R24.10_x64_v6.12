@@ -6,7 +6,7 @@
 # See /LICENSE for more information.
 #
 # https://github.com/P3TERX/Actions-OpenWrt
-# File name: 2512_x64_test_diy-part2.sh
+# File name: 2410_x64_test_diy-part2.sh
 # Description: OpenWrt DIY script part 2 (After Update feeds)
 #
 
