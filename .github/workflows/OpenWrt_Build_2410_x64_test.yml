@@ -1,4 +1,4 @@
-name: OpenWrt_Build_2512_x64_test
+name: OpenWrt_Build_2410_x64_test
 
 permissions:
   contents: write
@@ -13,10 +13,10 @@ env:
   REPO_URL: https://github.com/coolsnowwolf/lede
   REPO_BRANCH: master
   FEEDS_CONF: feeds.conf.default
-  CONFIG_FILE: config/2512_x64_test.config
-  DIY_P1_SH: diy_script/2512_x64_test_diy-part1.sh
-  DIY_P2_SH: diy_script/2512_x64_test_diy-part2.sh
-  FILE_NAME: OpenWrt_2512_x64_test
+  CONFIG_FILE: config/2410_x64_test.config
+  DIY_P1_SH: diy_script/2410_x64_test_diy-part1.sh
+  DIY_P2_SH: diy_script/2410_x64_test_diy-part2.sh
+  FILE_NAME: OpenWrt_2410_x64_test
   PRODUCT_NAME: x86_64
   CACHE_TOOLCHAIN: true
   UPLOAD_BIN_DIR: true
@@ -25,8 +25,8 @@ env:
   TZ: Asia/Shanghai
 
 jobs:
-  OpenWrt_Build_2512_x64_test:
-    name: 编译OpenWrt_Build_2512_x64_test
+  OpenWrt_Build_2410_x64_test:
+    name: 编译OpenWrt_Build_2410_x64_test
     runs-on: ubuntu-24.04
 
     steps:
