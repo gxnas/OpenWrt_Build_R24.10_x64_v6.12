@@ -25,6 +25,9 @@ sed -i '$a src-git passwall2_luci https://github.com/Openwrt-Passwall/openwrt-pa
 # 添加 Lucky
 git clone  --depth=1 -b main https://github.com/gdy666/luci-app-lucky.git package/lucky
 
+# 添加 luci-app-mosdns-panel
+git clone https://github.com/your-username/luci-app-mosdns-panel.git package/luci-app-mosdns-panel
+
 # 添加 netdata
 git clone https://github.com/sirpdboy/luci-app-netdata package/luci-app-netdata
 
