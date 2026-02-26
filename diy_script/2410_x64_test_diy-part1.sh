@@ -23,10 +23,7 @@ sed -i '$a src-git passwall_luci https://github.com/Openwrt-Passwall/openwrt-pas
 sed -i '$a src-git passwall2_luci https://github.com/Openwrt-Passwall/openwrt-passwall2.git;main' feeds.conf.default
 
 # 添加 Lucky
-git clone  --depth=1 -b main https://github.com/gdy666/luci-app-lucky.git package/lucky
-
-# 添加 luci-app-mosdns-panel
-git clone https://github.com/your-username/luci-app-mosdns-panel.git package/luci-app-mosdns-panel
+git clone https://github.com/gdy666/luci-app-lucky.git package/lucky
 
 # 添加 netdata
 git clone https://github.com/sirpdboy/luci-app-netdata package/luci-app-netdata
@@ -34,5 +31,5 @@ git clone https://github.com/sirpdboy/luci-app-netdata package/luci-app-netdata
 # argon 主题
 rm -rf feeds/luci/themes/luci-theme-argon
 rm -rf feeds/luci/applications/luci-app-argon-config
-git clone --depth=1 https://github.com/jerrykuku/luci-theme-argon package/luci-theme-argon
-git clone --depth=1 https://github.com/jerrykuku/luci-app-argon-config package/luci-app-argon-config
+git clone -b 18.06 https://github.com/jerrykuku/luci-theme-argon.git package/luci-theme-argon
+git clone -b 18.06 https://github.com/jerrykuku/luci-app-argon-config.git package/luci-app-argon-config
