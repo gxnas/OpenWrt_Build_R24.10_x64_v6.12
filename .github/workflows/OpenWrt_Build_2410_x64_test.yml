@@ -132,6 +132,10 @@ jobs:
       id: package
       run: |
         cd openwrt
+        sed -i '/CMAKE_OPTIONS/a\ \ \ \ -DBUILD_DOC=OFF \\' feeds/small/shadowsocks-libev/Makefile
+        make defconfig
+        make package/feeds/small/shadowsocks-libev/clean
+        make -j$(nproc)
         make defconfig
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
