@@ -43,6 +43,9 @@ sed -i "s/DISTRIB_REVISION='R[0-9]\+\.[0-9]\+\.[0-9]\+'/DISTRIB_REVISION='@R$bui
 sed -i "s/LEDE/OpenWrt_2410_x64_${build_name} by GXNAS build/g" package/lean/default-settings/files/zzz-default-settings
 
 # 修改右下角脚本版本信息和登录页版本信息
+echo "==================package/luci-theme-argon文件夹下有：=================="
+ls -la package/luci-theme-argon
+echo "==================package/luci-theme-argon文件夹显示结束：=================="
 cp -f $GITHUB_WORKSPACE/personal/argon/footer.ut package/luci-theme-argon/ucode/template/themes/argon/footer.ut
 cp -f $GITHUB_WORKSPACE/personal/argon/footer_login.ut package/luci-theme-argon/ucode/template/themes/argon/footer_login.ut
 sed -i "s/OpenWrt_2410_x64_build_name by GXNAS build @R build_date/OpenWrt_2410_x64_${build_name} by GXNAS build @R${build_date}/g" \
