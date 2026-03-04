@@ -22,6 +22,8 @@ env:
   UPLOAD_BIN_DIR: true
   UPLOAD_FIRMWARE: true
   UPLOAD_RELEASE: true
+  TELEGRAM_WORK_PUSH: true
+  WECHAT_WORK_PUSH: true
   TZ: Asia/Shanghai
 
 jobs:
@@ -226,6 +228,7 @@ jobs:
         echo "⚽ 编译日志请查看 Actions 构建详情" >> release.txt
 
     - name: 上传固件至Release
+      id: upreleases
       uses: softprops/action-gh-release@v2
       if: ${{ env.UPLOAD_RELEASE == 'true' && steps.tag.outputs.status == 'success' && !cancelled() }}
       env:
@@ -235,3 +238,51 @@ jobs:
         tag_name: ${{ env.FILE_NAME }}
         body_path: release.txt
         files: ${{ env.FIRMWARE }}/*
+
+    - name: Telegram notification upload success
+      if: steps.upreleases.outputs.status == 'success' && env.TELEGRAM_WORK_PUSH == 'true'
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+          ♨️ 【${{ env.FILE_NAME }}】项目编译完成 ♨️
+          - 🎯 固件名称: ${{ env.FILE_NAME }}
+          - 📅 编译时间: $release_date
+          - ⚙️ 构建配置: $CONFIG_FILE
+          - 💻 平台架构: x86_64
+          - 🧱 固件源码: ${{ env.REPO_URL }}
+          - 💝 源码分支: ${{ env.REPO_BRANCH }}
+          - 🚀 内核版本: ${{ env.KERNEL }}
+          - 🌐 默认地址：192.168.1.11
+          - 🧑‍💼 默认账号：root
+          - 🔑 默认密码：无密码
+          https://github.com/gxnas/OpenWrt_Build_R24.10_x64_v6.12/releases/tag/${{ env.FILE_NAME }}
+
+    - name: Enterprise WeChat notification upload success
+      if: steps.upreleases.outputs.status == 'success' && env.WECHAT_WORK_PUSH == 'true'
+      run: |
+        curl -X POST "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WEBHOOK_SEND_KEY }}" \
+        -H "Content-Type: application/json" \
+        -d '{
+            "msgtype": "news",
+            "news": {
+              "articles": [
+                {
+                  "title": "♨️ 【${{ env.FILE_NAME }}】项目编译完成 ♨️",
+                  "description": "- ❀  固件名称：${{ env.FILE_NAME }}-${{ env.KERNEL }}\n
+                    - 🎯 固件名称: ${{ env.FILE_NAME }}\n
+                    - 📅 编译时间: $release_date\n
+                    - ⚙️ 构建配置: $CONFIG_FILE\n
+                    - 💻 平台架构: x86_64\n
+                    - 🧱 固件源码: ${{ env.REPO_URL }}\n
+                    - 💝 源码分支: ${{ env.REPO_BRANCH }}\n
+                    - 🚀 内核版本: ${{ env.KERNEL }}\n
+                    - 🌐 默认地址：192.168.1.11\n
+                    - 🧑‍💼 默认账号：root\n
+                    - 🔑 默认密码：无密码",
+                  "url": "https://github.com/gxnas/OpenWrt_Build_R24.10_x64_v6.12/releases/tag/${{ env.FILE_NAME }}"
+                }
+              ]
+            }
+          }'
