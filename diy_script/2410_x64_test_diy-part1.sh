@@ -31,7 +31,10 @@ git clone https://github.com/gdy666/luci-app-lucky.git package/lucky
 git clone https://github.com/sirpdboy/luci-app-netdata package/luci-app-netdata
 
 # 添加 oaf
-rm -rf feeds/packages/net/open-app-filter
+#rm -rf feeds/packages/net/open-app-filter
+echo "===============feeds/packages/net文件夹下有：==============="
+ls -R feeds/packages/net/
+echo "=============================="
 git clone https://github.com/destan19/OpenAppFilter.git package/OpenAppFilter
 
 # argon 主题
