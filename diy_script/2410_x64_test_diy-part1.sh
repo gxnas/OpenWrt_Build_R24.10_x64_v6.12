@@ -30,6 +30,10 @@ git clone https://github.com/gdy666/luci-app-lucky.git package/lucky
 # 添加 netdata
 git clone https://github.com/sirpdboy/luci-app-netdata package/luci-app-netdata
 
+# 添加 oaf
+rm -rf feeds/packages/net/open-app-filter
+git clone https://github.com/destan19/OpenAppFilter.git package/OpenAppFilter
+
 # argon 主题
 rm -rf feeds/luci/themes/luci-theme-argon
 rm -rf feeds/luci/applications/luci-app-argon-config
