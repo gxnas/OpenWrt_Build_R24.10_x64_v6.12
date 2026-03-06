@@ -130,16 +130,6 @@ jobs:
         mixkey: ${{ env.SOURCE_REPO }}-${{ env.REPO_BRANCH }}-${{ env.DEVICE_TARGET }}-${{ env.DEVICE_SUBTARGET }}
         prefix: ${{ env.OPENWRT_PATH }}
 
-    - name: 检测 EXT4 并确保扩容组件存在
-      run: |
-        cd openwrt
-        if grep -q "CONFIG_TARGET_ROOTFS_EXT4FS=y" .config; then
-          echo "检测到 EXT4 固件，确保包含 resize2fs 组件..."
-          grep -q "CONFIG_PACKAGE_resize2fs=y" .config || echo "CONFIG_PACKAGE_resize2fs=y" >> .config
-        else
-          echo "未启用 EXT4，跳过扩容组件检查。"
-        fi
-
     - name: 下载软件包
       id: package
       run: |
@@ -190,10 +180,10 @@ jobs:
       run: |
         cd openwrt/bin/targets/*/*
         echo "KERNEL=$(cat *.manifest | grep ^kernel | cut -d- -f2 | tr -d ' ')" >> $GITHUB_ENV
-        #mv openwrt-x86-64-generic-squashfs-combined.img.gz ${{ env.FILE_NAME }}-${{ env.FILE_DATE }}-bios.img.gz
-        #mv openwrt-x86-64-generic-squashfs-combined-efi.img.gz ${{ env.FILE_NAME }}-${{ env.FILE_DATE }}-uefi.img.gz
-        mv openwrt-x86-64-generic-ext4-combined.img.gz ${{ env.FILE_NAME }}-${{ env.FILE_DATE }}-ext4-bios.img.gz
-        mv openwrt-x86-64-generic-ext4-combined-efi.img.gz ${{ env.FILE_NAME }}-${{ env.FILE_DATE }}-ext4-uefi.img.gz
+        mv openwrt-x86-64-generic-squashfs-combined.img.gz ${{ env.FILE_NAME }}-${{ env.FILE_DATE }}-bios.img.gz
+        mv openwrt-x86-64-generic-squashfs-combined-efi.img.gz ${{ env.FILE_NAME }}-${{ env.FILE_DATE }}-uefi.img.gz
+        #mv openwrt-x86-64-generic-ext4-combined.img.gz ${{ env.FILE_NAME }}-${{ env.FILE_DATE }}-ext4-bios.img.gz
+        #mv openwrt-x86-64-generic-ext4-combined-efi.img.gz ${{ env.FILE_NAME }}-${{ env.FILE_DATE }}-ext4-uefi.img.gz
         rm -rf config.buildinfo
         rm -rf feeds.buildinfo
         rm -rf openwrt-x86-64-generic-kernel.bin
