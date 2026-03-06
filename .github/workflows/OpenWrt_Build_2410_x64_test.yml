@@ -164,38 +164,6 @@ jobs:
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
         echo "FILE_DATE=$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
 
-    - name: 编译成功，发Telegram通知
-      if: ${{ steps.compile.outputs.status == 'success' && env.TELEGRAM_WORK_PUSH == 'true' }}
-      uses: appleboy/telegram-action@master
-      with:
-        to: ${{ secrets.TELEGRAM_TO }}
-        token: ${{ secrets.TELEGRAM_TOKEN }}
-        message: |
-          ♨️ 【${{ env.FILE_NAME }}】项目编译完成 ♨️
-          - 🎯 固件名称: ${{ env.FILE_NAME }}
-          - 📅 编译时间: ${{ steps.tag.outputs.release_date }}
-          - ⚙️ 构建配置: ${{ env.CONFIG_FILE }}
-          - 💻 平台架构: x86_64
-          - 🧱 固件源码: ${{ env.REPO_URL }}
-          - 💝 源码分支: ${{ env.REPO_BRANCH }}
-          - 🚀 内核版本: ${{ env.KERNEL }}
-          - 🌐 默认地址：192.168.1.11
-          - 🧑‍💼 默认账号：root
-          - 🔑 默认密码：无密码
-          https://github.com/${{ github.repository }}/releases/tag/${{ env.FILE_NAME }}
-
-    - name: 编译成功，发企业微信通知
-      if: ${{ steps.compile.outputs.status == 'success' && env.WECHAT_WORK_PUSH == 'true' }}
-      run: |
-        curl -X POST "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WEBHOOK_SEND_KEY }}" \
-        -H "Content-Type: application/json" \
-        -d '{
-          "msgtype": "text",
-          "text": {
-            "content": "【OpenWrt 编译完成】\n\n固件名称: ${{ env.FILE_NAME }}\n编译时间: ${{ steps.tag.outputs.release_date }}\n源码: ${{ env.REPO_URL }}\n分支: ${{ env.REPO_BRANCH }}\n内核: ${{ env.KERNEL }}\n\n下载:\nhttps://github.com/${{ github.repository }}/releases/tag/${{ env.FILE_NAME }}"
-          }
-        }'
-
     - name: 编译后检查磁盘使用情况
       if: (!cancelled())
       run: |
@@ -282,3 +250,34 @@ jobs:
         tag_name: ${{ env.FILE_NAME }}
         body_path: release.txt
         files: ${{ env.FIRMWARE }}/*
+
+    - name: 编译成功，发Telegram通知
+      if: ${{ success() && env.TELEGRAM_WORK_PUSH == 'true' }}
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+          ♨️【${{ env.FILE_NAME }}】固件编译完成
+          🎯 固件名称: ${{ env.FILE_NAME }}
+          ⚙️ 构建配置: ${{ env.CONFIG_FILE }}
+          💻 平台架构: x86_64
+          🧱 固件源码: ${{ env.REPO_URL }}
+          🌿 源码分支: ${{ env.REPO_BRANCH }}
+          🌐 默认地址: 192.168.1.11
+          👤 用户名: root
+          🔑 密码: 无
+          📦 下载地址:
+          https://github.com/${{ github.repository }}/releases/tag/${{ env.FILE_NAME }}
+
+    - name: 编译成功，发企业微信通知
+      if: ${{ success() && env.WECHAT_WORK_PUSH == 'true' }}
+      run: |
+        curl 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WEBHOOK_SEND_KEY }}' \
+        -H 'Content-Type: application/json' \
+        -d '{
+          "msgtype": "text",
+          "text": {
+            "content": "【OpenWrt编译完成】\n\n固件名称: ${{ env.FILE_NAME }}\n架构: x86_64\n源码: ${{ env.REPO_URL }}\n分支: ${{ env.REPO_BRANCH }}\n\n下载地址:\nhttps://github.com/${{ github.repository }}/releases/tag/${{ env.FILE_NAME }}"
+          }
+        }'
