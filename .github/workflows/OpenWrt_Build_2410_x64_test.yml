@@ -242,40 +242,27 @@ jobs:
         files: ${{ env.FIRMWARE }}/*
 
     - name: 编译成功，发Telegram通知
-      if: ${{ success() && env.TELEGRAM_WORK_PUSH == 'true' }}
-      uses: appleboy/telegram-action@master
-      with:
-        to: ${{ secrets.TELEGRAM_TO }}
-        token: ${{ secrets.TELEGRAM_TOKEN }}
-        message: |
-          ♨️【${{ env.FILE_NAME }}】固件编译完成
-          🎯 固件名称: ${{ env.FILE_NAME }}
-          💻 平台架构: x86_64
-          🧱 固件源码: ${{ env.REPO_URL }}
-          🌿 源码分支: ${{ env.REPO_BRANCH }}
-          🌐 默认地址: 192.168.1.11
-          👤 用户名: root
-          🔑 密码: 无
-          📦 下载地址:
-          https://github.com/${{ github.repository }}/releases/tag/${{ env.FILE_NAME }}
+      if: success() && env.TELEGRAM_WORK_PUSH == 'true'
+      run: |
+        MESSAGE="♨️【${{ env.FILE_NAME }}】固件编译完成
+        🎯 固件名称: ${{ env.FILE_NAME }}
+        💻 平台架构: x86_64
+        🧱 固件源码: ${{ env.REPO_URL }}
+        🌿 源码分支: ${{ env.REPO_BRANCH }}
+        🌐 默认地址: 192.168.1.11
+        👤 用户名: root
+        🔑 密码: 无
+        📦 下载地址:https://github.com/${{ github.repository }}/releases/tag/${{ env.FILE_NAME }}"
+        curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" \
+          -d chat_id="${{ secrets.TELEGRAM_TO }}" \
+          -d text="$MESSAGE" \
+          -d disable_web_page_preview=true
 
     - name: 编译成功，发企业微信通知
-      if: ${{ success() && env.WECHAT_WORK_PUSH == 'true' }}
+      if: success() && env.WECHAT_WORK_PUSH == 'true'
       run: |
+        CONTENT="♨️【${{ env.FILE_NAME }}】固件编译完成\n🎯 固件名称: ${{ env.FILE_NAME }}\n💻 平台架构: x86_64\n🧱 固件源码: ${{ env.REPO_URL }}\n🌿 源码分支: ${{ env.REPO_BRANCH }}\n🌐 默认地址: 192.168.1.11\n👤 用户名: root\n🔑 密码: 无\n📦 下载地址:\nhttps://github.com/${{ github.repository }}/releases/tag/${{ env.FILE_NAME }}"
         curl -X POST "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WEBHOOK_SEND_KEY }}" \
-        -H "Content-Type: application/json" \
-        -d '{
-          "msgtype": "text",
-          "text": {
-            "content": "♨️【${{ env.FILE_NAME }}】固件编译完成
-          🎯 固件名称: ${{ env.FILE_NAME }}
-          💻 平台架构: x86_64
-          🧱 固件源码: ${{ env.REPO_URL }}
-          🌿 源码分支: ${{ env.REPO_BRANCH }}
-          🌐 默认地址: 192.168.1.11
-          👤 用户名: root
-          🔑 密码: 无
-          📦 下载地址:
-          https://github.com/${{ github.repository }}/releases/tag/${{ env.FILE_NAME }}"
-          }
-        }'
+          -H "Content-Type: application/json" \
+          -d "$(jq -n --arg content "$CONTENT" '{msgtype: "text", text: {content: $content}}')"
+      
