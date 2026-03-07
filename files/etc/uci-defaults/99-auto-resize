@@ -1,26 +1,20 @@
-# EXT4 自动扩容脚本
 #!/bin/sh
 
 LOGFILE="/root/auto-resize.log"
-echo "===== EXT4 自动扩容开始 =====" > $LOGFILE
+echo "===== EXT4 自动扩容开始 $(date) =====" > $LOGFILE
 
+# 获取根目录设备节点
 ROOT_DEV=$(findmnt -n -o SOURCE /)
+[ -z "$ROOT_DEV" ] && echo "未找到根设备" >> $LOGFILE && exit 0
 
-if [ -z "$ROOT_DEV" ]; then
-    echo "Root device not found" >> $LOGFILE
-    exit 0
-fi
-
-echo "Root device: $ROOT_DEV" >> $LOGFILE
-
+# 检查是否为 ext4
 FSTYPE=$(blkid -s TYPE -o value $ROOT_DEV)
-
 if [ "$FSTYPE" != "ext4" ]; then
-    echo "Not ext4 filesystem, skip." >> $LOGFILE
+    echo "非 ext4 文件系统，跳过: $FSTYPE" >> $LOGFILE
     exit 0
 fi
 
-# 解析磁盘与分区号
+# 解析磁盘和分区号
 case "$ROOT_DEV" in
     *nvme*|*mmcblk*)
         DISK=$(echo $ROOT_DEV | sed 's/p[0-9]*$//')
@@ -28,41 +22,51 @@ case "$ROOT_DEV" in
         ;;
     *)
         DISK=$(echo $ROOT_DEV | sed 's/[0-9]*$//')
-        PART=$(echo $ROOT_DEV | sed 's/.*\([0-9]\)$/\1/')
+        PART=$(echo $ROOT_DEV | sed 's/.*[^0-9]//')
         ;;
 esac
 
-echo "Disk: $DISK" >> $LOGFILE
-echo "Partition: $PART" >> $LOGFILE
+echo "Root device: $ROOT_DEV" >> $LOGFILE
+echo "Disk: $DISK, Partition: $PART" >> $LOGFILE
 
-# 获取磁盘总扇区
+# 检查剩余空间
 DISK_SIZE=$(cat /sys/block/$(basename $DISK)/size)
 PART_SIZE=$(cat /sys/class/block/$(basename $ROOT_DEV)/size)
 
-echo "Disk sectors: $DISK_SIZE" >> $LOGFILE
-echo "Partition sectors: $PART_SIZE" >> $LOGFILE
-
 if [ "$DISK_SIZE" -le "$PART_SIZE" ]; then
-    echo "No extra space detected, skip resize." >> $LOGFILE
+    echo "没有检测到额外空间，无需扩容。" >> $LOGFILE
     exit 0
 fi
 
-echo "Extra space detected. Expanding partition..." >> $LOGFILE
+echo "检测到额外空间，准备扩容分区..." >> $LOGFILE
 
-# 使用 growpart（推荐方式）
+# 步骤 1: 扩充分区表
 if command -v growpart >/dev/null 2>&1; then
-    growpart $DISK $PART >> $LOGFILE 2>&1
+    growpart "$DISK" "$PART" >> $LOGFILE 2>&1
 else
-    echo "growpart not found, trying block resize" >> $LOGFILE
-    block resize >> $LOGFILE 2>&1
+    echo "growpart 不存在，尝试使用 fdisk..." >> $LOGFILE
+    # 自动重写分区表：删除旧分区，新建同编号、同起点、终点最大的分区
+    PART_START=$(cat /sys/class/block/$(basename $ROOT_DEV)/start)
+    (
+      echo d # Delete
+      [ "$PART" -gt 1 ] && echo "$PART"
+      echo n # New
+      echo p # Primary
+      echo "$PART"
+      echo "$PART_START"
+      echo   # Default end
+      echo N # Don't signature
+      echo w # Write
+    ) | fdisk "$DISK" >> $LOGFILE 2>&1
 fi
 
-sleep 3
+# 步骤 2: 强制内核重新读取分区表
+echo "刷新分区表..." >> $LOGFILE
+partprobe "$DISK" >> $LOGFILE 2>&1 || partx -u "$ROOT_DEV" >> $LOGFILE 2>&1
 
-echo "Resizing ext4 filesystem..." >> $LOGFILE
-resize2fs $ROOT_DEV >> $LOGFILE 2>&1
+# 步骤 3: 扩容文件系统
+echo "执行 resize2fs..." >> $LOGFILE
+resize2fs "$ROOT_DEV" >> $LOGFILE 2>&1
 
 echo "===== 扩容完成 =====" >> $LOGFILE
-df -h >> $LOGFILE
-
-exit 0
+df -h / >> $LOGFILE
