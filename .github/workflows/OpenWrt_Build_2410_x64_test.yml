@@ -261,7 +261,15 @@ jobs:
     - name: 编译成功，发企业微信通知
       if: success() && env.WECHAT_WORK_PUSH == 'true'
       run: |
-        CONTENT="♨️【${{ env.FILE_NAME }}】固件编译完成\n🎯 固件名称: ${{ env.FILE_NAME }}\n💻 平台架构: x86_64\n🧱 固件源码: ${{ env.REPO_URL }}\n🌿 源码分支: ${{ env.REPO_BRANCH }}\n🌐 默认地址: 192.168.1.11\n👤 用户名: root\n🔑 密码: 无\n📦 下载地址:\nhttps://github.com/${{ github.repository }}/releases/tag/${{ env.FILE_NAME }}"
+        CONTENT="♨️【${{ env.FILE_NAME }}】固件编译完成
+        🎯 固件名称: ${{ env.FILE_NAME }}
+        💻 平台架构: x86_64
+        🧱 固件源码: ${{ env.REPO_URL }}
+        🌿 源码分支: ${{ env.REPO_BRANCH }}
+        🌐 默认地址: 192.168.1.11
+        👤 用户名: root
+        🔑 密码: 无
+        📦 下载地址: https://github.com/${{ github.repository }}/releases/tag/${{ env.FILE_NAME }}"
         curl -X POST "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WEBHOOK_SEND_KEY }}" \
           -H "Content-Type: application/json" \
           -d "$(jq -n --arg content "$CONTENT" '{msgtype: "text", text: {content: $content}}')"
