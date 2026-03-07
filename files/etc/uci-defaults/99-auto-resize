@@ -1,20 +1,13 @@
 #!/bin/sh
 
 LOGFILE="/root/auto-resize.log"
-echo "===== EXT4 自动扩容开始 $(date) =====" > $LOGFILE
+echo "===== EXT4 终极自动扩容开始 $(date) =====" > $LOGFILE
 
-# 获取根目录设备节点
+# 1. 获取根设备 (例如 /dev/sda2)
 ROOT_DEV=$(findmnt -n -o SOURCE /)
-[ -z "$ROOT_DEV" ] && echo "未找到根设备" >> $LOGFILE && exit 0
+[ -z "$ROOT_DEV" ] && exit 0
 
-# 检查是否为 ext4
-FSTYPE=$(blkid -s TYPE -o value $ROOT_DEV)
-if [ "$FSTYPE" != "ext4" ]; then
-    echo "非 ext4 文件系统，跳过: $FSTYPE" >> $LOGFILE
-    exit 0
-fi
-
-# 解析磁盘和分区号
+# 2. 解析磁盘名和分区号
 case "$ROOT_DEV" in
     *nvme*|*mmcblk*)
         DISK=$(echo $ROOT_DEV | sed 's/p[0-9]*$//')
@@ -26,43 +19,37 @@ case "$ROOT_DEV" in
         ;;
 esac
 
-echo "Root device: $ROOT_DEV" >> $LOGFILE
-echo "Disk: $DISK, Partition: $PART" >> $LOGFILE
+# 3. 获取分区的精确起始扇区 (关键：重建必须完全对齐)
+START_SECTOR=$(cat /sys/class/block/$(basename $ROOT_DEV)/start)
+echo "Root: $ROOT_DEV | Disk: $DISK | Part: $PART | Start: $START_SECTOR" >> $LOGFILE
 
-# 检查剩余空间
-DISK_SIZE=$(cat /sys/block/$(basename $DISK)/size)
-PART_SIZE=$(cat /sys/class/block/$(basename $ROOT_DEV)/size)
+# 4. 使用 fdisk 强制重写分区表
+# 逻辑：d(删除2) -> d(删除3,清障) -> n(新建) -> p(主分区) -> 2(分区号) -> 起始扇区 -> 默认终点 -> N(不抹除签名) -> w(保存)
+echo "正在强行重写分区表并清空后续分区..." >> $LOGFILE
+fdisk "$DISK" <<EOF >> $LOGFILE 2>&1
+d
+$PART
+d
+$((PART + 1))
+d
+$((PART + 2))
+n
+p
+$PART
+$START_SECTOR
 
-if [ "$DISK_SIZE" -le "$PART_SIZE" ]; then
-    echo "没有检测到额外空间，无需扩容。" >> $LOGFILE
-    exit 0
-fi
+N
+w
+EOF
 
-echo "检测到额外空间，准备扩容分区..." >> $LOGFILE
+# 5. 强制刷新内核分区状态
+echo "刷新内核分区状态..." >> $LOGFILE
+partx -u "$ROOT_DEV" >> $LOGFILE 2>&1
+partprobe "$DISK" >> $LOGFILE 2>&1
 
-# 步骤 1: 扩充分区表
-echo "准备扩容分区..." >> $LOGFILE
-
-# 优先尝试 growpart
-if command -v growpart >/dev/null 2>&1; then
-    growpart "$DISK" "$PART" >> $LOGFILE 2>&1
-# 如果没有 growpart，强制使用 parted
-elif command -v parted >/dev/null 2>&1; then
-    echo "使用 parted 进行扩容..." >> $LOGFILE
-    # -s 表示脚本模式，100% 表示将分区扩展到磁盘末尾
-    parted -s "$DISK" resizepart "$PART" 100% >> $LOGFILE 2>&1
-else
-    echo "错误：未找到 growpart 或 parted，无法扩容分区！" >> $LOGFILE
-    exit 1
-fi
-
-# 步骤 2: 强制内核重新读取分区表
-echo "刷新分区表..." >> $LOGFILE
-partprobe "$DISK" >> $LOGFILE 2>&1 || partx -u "$ROOT_DEV" >> $LOGFILE 2>&1
-
-# 步骤 3: 扩容文件系统
+# 6. 执行在线文件系统扩容
 echo "执行 resize2fs..." >> $LOGFILE
 resize2fs "$ROOT_DEV" >> $LOGFILE 2>&1
 
-echo "===== 扩容完成 =====" >> $LOGFILE
+echo "===== 扩容任务结束 =====" >> $LOGFILE
 df -h / >> $LOGFILE
