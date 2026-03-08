@@ -1,55 +1,47 @@
 #!/bin/sh
 
 LOGFILE="/root/auto-resize.log"
-echo "===== EXT4 终极自动扩容开始 $(date) =====" > $LOGFILE
+echo "===== EXT4 GPT 兼容扩容开始 $(date) =====" > $LOGFILE
 
-# 1. 获取根设备 (例如 /dev/sda2)
+# 1. 定位设备
 ROOT_DEV=$(findmnt -n -o SOURCE /)
 [ -z "$ROOT_DEV" ] && exit 0
 
-# 2. 解析磁盘名和分区号
 case "$ROOT_DEV" in
-    *nvme*|*mmcblk*)
-        DISK=$(echo $ROOT_DEV | sed 's/p[0-9]*$//')
-        PART=$(echo $ROOT_DEV | sed 's/.*p//')
-        ;;
-    *)
-        DISK=$(echo $ROOT_DEV | sed 's/[0-9]*$//')
-        PART=$(echo $ROOT_DEV | sed 's/.*[^0-9]//')
-        ;;
+    *nvme*|*mmcblk*) DISK=$(echo $ROOT_DEV | sed 's/p[0-9]*$//'); PART=$(echo $ROOT_DEV | sed 's/.*p//') ;;
+    *) DISK=$(echo $ROOT_DEV | sed 's/[0-9]*$//'); PART=$(echo $ROOT_DEV | sed 's/.*[^0-9]//') ;;
 esac
 
-# 3. 获取分区的精确起始扇区 (关键：重建必须完全对齐)
 START_SECTOR=$(cat /sys/class/block/$(basename $ROOT_DEV)/start)
-echo "Root: $ROOT_DEV | Disk: $DISK | Part: $PART | Start: $START_SECTOR" >> $LOGFILE
 
-# 4. 使用 fdisk 强制重写分区表
-# 逻辑：d(删除2) -> d(删除3,清障) -> n(新建) -> p(主分区) -> 2(分区号) -> 起始扇区 -> 默认终点 -> N(不抹除签名) -> w(保存)
-echo "正在强行重写分区表并清空后续分区..." >> $LOGFILE
-fdisk "$DISK" <<EOF >> $LOGFILE 2>&1
-d
-$PART
-d
-$((PART + 1))
-d
-$((PART + 2))
-n
-p
-$PART
-$START_SECTOR
+# 2. 核心：针对 GPT 的修复与分区重写
+echo "正在修复 GPT 并重建分区..." >> $LOGFILE
 
-N
-w
-EOF
+# 这里改用更通用的 fdisk 指令流
+# v: 验证并修复 mismatch | d: 删除 | n: 新建 | w: 写入
+(
+  echo v # 验证并触发 GPT 修复
+  echo d # 删除分区
+  echo $PART
+  echo n # 新建
+  echo $PART # 分区号
+  echo $START_SECTOR # 起始位置
+  echo      # 默认结束位置 (最大)
+  echo w # 写入
+) | fdisk "$DISK" >> $LOGFILE 2>&1
 
-# 5. 强制刷新内核分区状态
-echo "刷新内核分区状态..." >> $LOGFILE
+# 3. 极其重要：强制内核多次尝试同步
+echo "强制内核同步分区表..." >> $LOGFILE
+sync
 partx -u "$ROOT_DEV" >> $LOGFILE 2>&1
 partprobe "$DISK" >> $LOGFILE 2>&1
+# 给内核一点反应时间
+sleep 2
 
-# 6. 执行在线文件系统扩容
+# 4. 执行文件系统扩容
 echo "执行 resize2fs..." >> $LOGFILE
-resize2fs "$ROOT_DEV" >> $LOGFILE 2>&1
+# 增加 -f 强制检查并尝试扩容
+resize2fs -f "$ROOT_DEV" >> $LOGFILE 2>&1
 
 echo "===== 扩容任务结束 =====" >> $LOGFILE
 df -h / >> $LOGFILE
