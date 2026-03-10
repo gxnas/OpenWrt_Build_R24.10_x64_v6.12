@@ -89,7 +89,7 @@
 
 #### 4、所有版本默认用户名：root，无密码，登录后请立即设置密码；
 
-#### 5、如果需要更改Openwrt默认的IP，可以用root登录SSH下输入命令 vi /etc/config/network 修改文件，需要注意的是，在SSH界面下看到有root@OpenWrt-GXNAS:/#开头的字样方可操作；
+#### 5、如果需要更改Openwrt默认的IP，可以用root登录SSH下输入命令 `vi /etc/config/network` 修改文件，需要注意的是，在SSH界面下看到有root@OpenWrt-GXNAS:/#开头的字样方可操作；
 
 #### 6、安装硬盘不可低于1G；
 
