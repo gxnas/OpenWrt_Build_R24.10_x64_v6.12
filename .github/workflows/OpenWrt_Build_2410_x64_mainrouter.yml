@@ -22,6 +22,8 @@ env:
   UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: false
   UPLOAD_RELEASE: true
+  TELEGRAM_WORK_PUSH: true
+  WECHAT_WORK_PUSH: true
   TZ: Asia/Shanghai
 
 jobs:
