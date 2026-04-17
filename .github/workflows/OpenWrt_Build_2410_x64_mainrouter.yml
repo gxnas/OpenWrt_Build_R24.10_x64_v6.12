@@ -66,7 +66,15 @@ jobs:
         DEBIAN_FRONTEND: noninteractive
       run: |
         sudo rm -rf /etc/apt/sources.list.d
-        sudo bash -c "curl -skL https://raw.githubusercontent.com/sbwml/actions/openwrt-build-setup/sources-24.04.list > /etc/apt/sources.list"
+        #sudo bash -c "curl -skL https://raw.githubusercontent.com/sbwml/actions/openwrt-build-setup/sources-24.04.list > /etc/apt/sources.list"
+        sudo rm -rf /etc/apt/sources.list.d/*
+        sudo bash -c 'cat > /etc/apt/sources.list <<EOF
+        deb https://mirrors.aliyun.com/ubuntu/ noble main restricted universe multiverse
+        deb https://mirrors.aliyun.com/ubuntu/ noble-updates main restricted universe multiverse
+        deb https://mirrors.aliyun.com/ubuntu/ noble-backports main restricted universe multiverse
+        deb https://mirrors.aliyun.com/ubuntu/ noble-security main restricted universe multiverse
+        EOF'
+        sudo -E apt-get update -y || sudo -E apt-get update -y || sudo -E apt-get update -y
         sudo rm -rf /etc/apt/sources.list.d* /usr/local/lib/android* /etc/docker* /etc/firefox* /etc/mysql* /etc/php* /opt/google* /usr/share/dotnet* /usr/share/google* /usr/share/moby* /usr/share/mysql* /usr/share/php*
         sudo -E apt-get -qq update
         sudo -E apt-get -y purge azure* docker* dotnet* firefox* ghc* google* llvm* mongodb* mysql* php* powershell* snap* gfortran* microsoft-edge-stable
