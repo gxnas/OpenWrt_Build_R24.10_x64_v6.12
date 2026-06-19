@@ -25,7 +25,7 @@ sed -i '$a src-git openclaw https://github.com/10000ge10000/luci-app-openclaw.gi
 #git clone --depth=1 --single-branch https://github.com/sirpdboy/luci-app-adguardhome.git package/adguardhome
 #rm -rf feeds/packages/*adguardhome*
 #git clone https://github.com/xiaoxiao29/luci-app-adguardhome.git package/adguardhome
-git clone --depth=1 --single-branch https://github.com/grandway2025/luci-app-adguardhome.git
+git clone --depth=1 --single-branch https://github.com/rufengsuixing/luci-app-adguardhome.git
 
 # 添加 argon 主题
 rm -rf feeds/luci/themes/luci-theme-argon
