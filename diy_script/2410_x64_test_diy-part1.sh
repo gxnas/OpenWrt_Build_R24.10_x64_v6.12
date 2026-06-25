@@ -52,9 +52,5 @@ git clone https://github.com/sirpdboy/luci-app-poweroffdevice.git package/luci-a
 git clone https://github.com/EasyTier/luci-app-easytier.git package/luci-app-easytier
 
 # 添加 istore
-#git clone https://github.com/linkease/istore-ui package/luci-app-store-ui
-#git clone https://github.com/linkease/istore package/luci-app-store
-echo >> feeds.conf.default
-echo 'src-git istore https://github.com/linkease/istore;main' >> feeds.conf.default
-./scripts/feeds update istore
-./scripts/feeds install -d y -p istore luci-app-store
+git clone https://github.com/linkease/istore-ui package/luci-app-store-ui
+git clone https://github.com/linkease/istore package/luci-app-store
