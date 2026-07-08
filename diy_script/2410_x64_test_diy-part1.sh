@@ -54,3 +54,6 @@ git clone https://github.com/EasyTier/luci-app-easytier.git package/luci-app-eas
 # 添加 istore
 git clone https://github.com/linkease/istore-ui package/luci-app-store-ui
 git clone https://github.com/linkease/istore package/luci-app-store
+
+# 修复 mosdns v5 adblock_set 兼容问题
+sed -i 's/adblock_set/domain_set/g' ./feeds/luci/luci-app-mosdns/root/etc/init.d/mosdns
