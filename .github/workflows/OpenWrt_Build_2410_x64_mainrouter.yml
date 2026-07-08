@@ -122,6 +122,11 @@ jobs:
     - name: 安装软件源
       run: cd openwrt && ./scripts/feeds install -a
 
+    - name: 修复 MosDNS v5 兼容性问题
+      run: |
+        cd openwrt
+        find . -type f -path "*/luci-app-mosdns/root/etc/init.d/mosdns" -exec sed -i 's/adblock_set/domain_set/g' {} \;
+
     - name: 加载自定义配置
       run: |
         [ -e files ] && mv files openwrt/files
