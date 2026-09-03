@@ -55,24 +55,8 @@ git clone https://github.com/linkease/istore package/luci-app-store
 echo "=========================================="
 echo "替换 MosDNS 为 sbwml MosDNS v5"
 echo "=========================================="
-# 删除 feeds 安装进来的旧 MosDNS
-rm -rf package/feeds/small/luci-app-mosdns
-rm -rf package/feeds/small/mosdns
-rm -rf package/feeds/small/v2ray-geodata
-rm -rf package/feeds/packages/mosdns
-rm -rf package/feeds/packages/v2ray-geodata
-rm -rf package/feeds/luci/luci-app-mosdns
-# 删除可能已经存在的本地版本
-rm -rf package/mosdns
-rm -rf package/v2ray-geodata
-# 安装 MosDNS v5
-git clone --depth=1 -b v5 \
-https://github.com/sbwml/luci-app-mosdns.git \
-package/mosdns
-# 安装对应 geodata
-git clone --depth=1 \
-https://github.com/sbwml/v2ray-geodata.git \
-package/v2ray-geodata
-echo "===== MosDNS 来源检查 ====="
-find package -maxdepth 4 -type f -path "*mosdns*/Makefile" -print
-find package -maxdepth 4 -type f -path "*v2ray-geodata*/Makefile" -print
+rm -rf feeds/packages/lang/golang
+git clone https://github.com/sbwml/packages_lang_golang -b 26.x feeds/packages/lang/golang
+rm -rf feeds/packages/net/v2ray-geodata
+git clone https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns
+git clone https://github.com/sbwml/v2ray-geodata package/v2ray-geodata
