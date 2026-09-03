@@ -52,9 +52,7 @@ git clone https://github.com/sirpdboy/luci-app-poweroffdevice.git package/luci-a
 git clone https://github.com/linkease/istore-ui package/luci-app-store-ui
 git clone https://github.com/linkease/istore package/luci-app-store
 
-echo "=========================================="
-echo "替换 MosDNS 为 sbwml MosDNS v5"
-echo "=========================================="
+# 替换 MosDNS v5
 rm -rf feeds/packages/lang/golang
 git clone https://github.com/sbwml/packages_lang_golang -b 26.x feeds/packages/lang/golang
 rm -rf feeds/packages/net/v2ray-geodata
