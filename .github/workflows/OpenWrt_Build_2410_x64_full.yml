@@ -7,7 +7,8 @@ on:
   repository_dispatch:
   workflow_dispatch:
   schedule:
-    - cron: 0 0 * * 5
+    - cron: 0 2 1 * *
+    #每个月1号UTC 2:00（北京时间10:00）开始编译
 
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede
