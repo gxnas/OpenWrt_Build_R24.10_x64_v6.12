@@ -10,6 +10,16 @@
 # Description: OpenWrt DIY script part 1 (Before Update feeds)
 #
 
+# Git稀疏克隆，只克隆指定目录到本地
+function git_sparse_clone() {
+  branch="$1" repourl="$2" && shift 2
+  git clone --depth=1 -b $branch --single-branch --filter=blob:none --sparse $repourl
+  repodir=$(echo $repourl | awk -F '/' '{print $(NF)}')
+  cd $repodir && git sparse-checkout set $@
+  mv -f $@ ../package
+  cd .. && rm -rf $repodir
+}
+
 # 添加源仓库
 sed -i '/helloworld/d' feeds.conf.default
 sed -i '/small/d' feeds.conf.default
@@ -52,8 +62,8 @@ git clone https://github.com/sirpdboy/luci-app-poweroffdevice.git package/luci-a
 git clone https://github.com/EasyTier/luci-app-easytier.git package/luci-app-easytier
 
 # 添加 istore
-git clone https://github.com/linkease/istore-ui package/luci-app-store-ui
-git clone https://github.com/linkease/istore package/luci-app-store
+git_sparse_clone main https://github.com/linkease/istore-ui app-store-ui
+git_sparse_clone main https://github.com/linkease/istore luci
 
 # 替换 MosDNS v5
 rm -rf feeds/packages/lang/golang
