@@ -129,7 +129,7 @@ jobs:
         echo "--- iStore feed ---"
         grep -n "src-git istore" feeds.conf.default || true
         echo "--- iStore package ---"
-        find package/feeds/istore -maxdepth 3 -type f \\( -name 'Makefile' -o -name '*.po' \\) 2>/dev/null | head -100 || true
+        find package/feeds/istore -maxdepth 3 -type f 2>/dev/null | grep -E '/(Makefile|.*\\.po)$' | head -100 || true
         echo "--- iStore config entries ---"
         grep -E '^CONFIG_PACKAGE_luci-(app-store|i18n-store-zh-cn)=' .config || true
         echo "================================"
