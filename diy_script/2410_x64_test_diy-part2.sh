@@ -101,11 +101,17 @@ sed -i '/luci-i18n-upnp/d' package/Makefile
 sed -i '/miniupnpd/d' package/Makefile
 rm -f tmp/.package_install
 
+# 修复 iStore 默认显示为中文
+echo ">>> Enable iStore and Chinese translation"
+sed -i '/^CONFIG_PACKAGE_luci-app-store=/d' .config
+sed -i '/^CONFIG_PACKAGE_luci-i18n-store-zh-cn=/d' .config
+echo 'CONFIG_PACKAGE_luci-app-store=y' >> .config
+echo 'CONFIG_PACKAGE_luci-i18n-store-zh-cn=y' >> .config
+
 # 修复 default-settings 问题
 echo ">>> Purge default-settings (all variants)"
 find package/feeds -maxdepth 2 -type d -name "default-settings*" -exec rm -rf {} +
 rm -rf package/default-settings*
-
 mkdir -p package/base-files/files/etc/uci-defaults
 cat << 'EOF' > package/base-files/files/etc/uci-defaults/99-system
 #!/bin/sh
@@ -128,10 +134,8 @@ uci commit luci
 exit 0
 EOF
 chmod +x package/base-files/files/etc/uci-defaults/99-luci
-
 find . -type f \( -name "Makefile" -o -name "*.mk" \) \
 -exec sed -i 's#https://git.openwrt.org/#https://github.com/openwrt/#g' {} \;
-
 rm -rf dl/ustream-ssl-* build_dir/target-*/ustream-ssl-*
 find package -type f | xargs sed -i \
   -e '/luci-app-upnp/d' \
