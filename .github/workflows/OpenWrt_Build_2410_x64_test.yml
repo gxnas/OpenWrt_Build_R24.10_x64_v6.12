@@ -122,6 +122,18 @@ jobs:
     - name: 安装软件源
       run: cd openwrt && ./scripts/feeds install -a
 
+    - name: 检查 iStore 中文语言包
+      run: |
+        cd openwrt
+        echo "========== iStore 检查 =========="
+        echo "--- iStore feed ---"
+        grep -n "src-git istore" feeds.conf.default || true
+        echo "--- iStore package ---"
+        find package/feeds/istore -maxdepth 3 -type f \\( -name 'Makefile' -o -name '*.po' \\) 2>/dev/null | head -100 || true
+        echo "--- iStore config entries ---"
+        grep -E '^CONFIG_PACKAGE_luci-(app-store|i18n-store-zh-cn)=' .config || true
+        echo "================================"
+
     - name: 修复 MosDNS v5 兼容性问题
       run: |
         cd openwrt
