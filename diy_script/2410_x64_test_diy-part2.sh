@@ -104,9 +104,11 @@ rm -f tmp/.package_install
 # 修复 iStore 默认显示为中文
 echo ">>> Enable iStore and Chinese translation"
 sed -i '/^CONFIG_PACKAGE_luci-app-store=/d' .config
-sed -i '/^CONFIG_PACKAGE_luci-i18n-store-zh-cn=/d' .config
+sed -i '/^CONFIG_PACKAGE_luci-app-store-i18n-zh-cn=/d' .config
+sed -i '/^CONFIG_PACKAGE_luci-i18n-base-zh-cn=/d' .config
 echo 'CONFIG_PACKAGE_luci-app-store=y' >> .config
-echo 'CONFIG_PACKAGE_luci-i18n-store-zh-cn=y' >> .config
+echo 'CONFIG_PACKAGE_luci-app-store-i18n-zh-cn=y' >> .config
+echo 'CONFIG_PACKAGE_luci-i18n-base-zh-cn=y' >> .config
 
 # 修复 default-settings 问题
 echo ">>> Purge default-settings (all variants)"
