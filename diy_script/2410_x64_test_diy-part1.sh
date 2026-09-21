@@ -62,8 +62,10 @@ git clone https://github.com/sirpdboy/luci-app-poweroffdevice.git package/luci-a
 git clone https://github.com/EasyTier/luci-app-easytier.git package/luci-app-easytier
 
 # 添加 istore
-git_sparse_clone main https://github.com/linkease/istore-ui app-store-ui
-git_sparse_clone main https://github.com/linkease/istore luci
+rm -rf package/luci-app-store
+rm -rf package/luci-app-store-ui
+git clone --depth=1 https://github.com/linkease/istore.git package/luci-app-store
+git clone --depth=1 https://github.com/linkease/istore-ui.git package/luci-app-store-ui
 
 # 替换 MosDNS v5
 rm -rf feeds/packages/lang/golang
