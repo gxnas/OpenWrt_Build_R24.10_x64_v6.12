@@ -40,8 +40,8 @@ git clone https://github.com/xiaorouji/openwrt-passwall-packages package/passwal
 git clone https://github.com/sirpdboy/luci-app-poweroffdevice.git package/luci-app-poweroffdevice
 
 # 添加 istore
-git clone https://github.com/linkease/istore-ui package/luci-app-store-ui
-git clone https://github.com/linkease/istore package/luci-app-store
+sed -i '/src-git istore /d' feeds.conf.default
+echo 'src-git istore https://github.com/gxnas/istore;main' >> feeds.conf.default
 
 # 替换 MosDNS v5
 rm -rf feeds/packages/lang/golang
