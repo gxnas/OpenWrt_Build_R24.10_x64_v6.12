@@ -63,7 +63,7 @@ git clone https://github.com/EasyTier/luci-app-easytier.git package/luci-app-eas
 
 # 添加 istore
 sed -i '/src-git istore /d' feeds.conf.default
-echo 'src-git istore https://github.com/gxnas/istore;main' >> feeds.conf.default
+echo 'src-git istore https://github.com/linkease/istore;main' >> feeds.conf.default
 
 # 替换 MosDNS v5
 rm -rf feeds/packages/lang/golang
