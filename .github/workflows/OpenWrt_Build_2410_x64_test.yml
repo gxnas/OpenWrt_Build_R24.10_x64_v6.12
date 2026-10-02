@@ -35,16 +35,23 @@ jobs:
     - name: 检查服务器性能
       run: |
         echo "警告⚠ 分配的服务器性能有限，若选择的插件过多，务必注意CPU性能！"
-        echo -e "已知CPU型号(降序): 7763，8370C，8272CL，8171M，E5-2673\n"
+        echo -e "已知常见CPU型号（按照性能降序排名）:"
+        echo "  • AMD EPYC 9V74 / 9V33（最新一代，80核级）"
+        echo "  • AMD EPYC 7763（64核）"
+        echo "  • Intel Xeon Platinum 8370C / 8272CL"
+        echo "  • Intel Xeon Platinum 8171M"
+        echo "  • Intel Xeon E5-2673 v3/v4"
+        echo ""
         echo "--------------------------CPU信息--------------------------"
         echo "CPU物理数量: $(cat /proc/cpuinfo | grep "physical id" | sort | uniq | wc -l)"
-        echo "CPU核心数量: $(nproc)"
-        echo -e "CPU型号信息:$(cat /proc/cpuinfo | grep -m1 name | awk -F: '{print $2}')\n"
+        echo "CPU逻辑核心: $(nproc)"
+        echo -e "CPU型号信息: $(cat /proc/cpuinfo | grep -m1 'model name' | awk -F: '{print $2}' | xargs)\n"
         echo "--------------------------内存信息--------------------------"
         echo "已安装内存详细信息:"
-        echo -e "$(sudo lshw -short -C memory | grep GiB || true)\n"
+        echo -e "$(sudo lshw -short -C memory 2>/dev/null | grep -E 'GiB|system' || free -h)\n"
         echo "--------------------------硬盘信息--------------------------"
-        echo "硬盘数量: $(ls /dev/sd* 2>/dev/null | grep -v [1-9] | wc -l)" && df -hT
+        echo "硬盘数量: $(ls /dev/sd* 2>/dev/null | grep -v '[0-9]$' | wc -l || echo 0)"
+        df -hT
 
     - name: 最大化构建空间
       uses: easimon/maximize-build-space@master
