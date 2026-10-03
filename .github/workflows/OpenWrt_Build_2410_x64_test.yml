@@ -53,25 +53,22 @@ jobs:
         echo "硬盘数量: $(ls /dev/sd* 2>/dev/null | grep -v '[0-9]$' | wc -l || echo 0)"
         df -hT
 
-    - name: 最大化构建空间（增强版）
+    - name: 最大化构建空间
       uses: easimon/maximize-build-space@master
       with:
-        root-reserve-mb: 1024          # 从 2048 降到 1024，多留一点空间给编译
+        root-reserve-mb: 1024
         swap-size-mb: 8192
         remove-dotnet: 'true'
         remove-android: 'true'
         remove-haskell: 'true'
         remove-codeql: 'true'
         remove-docker-images: 'true'
-        remove-large-packages: 'true'  # 新增，清理更多大包
 
     - name: 强制清理磁盘（增强）
       run: |
         echo "===== 清理前磁盘状态 ====="
         df -hT
         echo ""
-        
-        # 清理更多不需要的内容
         sudo rm -rf /usr/share/dotnet
         sudo rm -rf /usr/local/lib/android
         sudo rm -rf /opt/ghc
@@ -91,11 +88,8 @@ jobs:
         sudo rm -rf /var/lib/containerd
         sudo rm -rf /tmp/*
         sudo rm -rf /var/tmp/*
-        
-        # 清理 apt 缓存
         sudo apt-get clean
-        sudo apt-get autoremove -y
-        
+        sudo apt-get autoremove -y || true
         echo "===== 清理后磁盘状态 ====="
         df -hT
 
