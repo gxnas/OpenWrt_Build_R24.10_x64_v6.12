@@ -12,15 +12,15 @@ uci add_list system.ntp.server='time.windows.com'
 uci commit system
 
 # LuCI 默认语言
-uci -q set "luci.main.lang=zh-cn"
+uci -q set "luci.main.lang=zh_cn"
 uci -q commit "luci"
+
+# iStore 前端语言
+uci -q set "istore.istore.istore_vue_lang=zh-cn"
+uci -q commit "istore"
 
 # 修复 Netdata 启动脚本权限问题
 [ -f /etc/init.d/netdata ] && chmod +x /etc/init.d/netdata
-
-# iStore 默认语言
-uci -q set "istore.istore.istore_vue_lang=zh-cn"
-uci -q commit "istore"
 
 # TurboACC 插件默认启用 BBR 拥塞控制
 if [ -f "/etc/config/turboacc" ]; then
