@@ -56,42 +56,13 @@ jobs:
     - name: 最大化构建空间
       uses: easimon/maximize-build-space@master
       with:
-        root-reserve-mb: 1024
+        root-reserve-mb: 2048
         swap-size-mb: 8192
         remove-dotnet: 'true'
         remove-android: 'true'
         remove-haskell: 'true'
         remove-codeql: 'true'
         remove-docker-images: 'true'
-
-    - name: 强制清理磁盘（增强）
-      run: |
-        echo "===== 清理前磁盘状态 ====="
-        df -hT
-        echo ""
-        sudo rm -rf /usr/share/dotnet
-        sudo rm -rf /usr/local/lib/android
-        sudo rm -rf /opt/ghc
-        sudo rm -rf /opt/hostedtoolcache
-        sudo rm -rf /usr/share/swift
-        sudo rm -rf /usr/local/.ghcup
-        sudo rm -rf /usr/local/share/powershell
-        sudo rm -rf /usr/local/share/chromium
-        sudo rm -rf /usr/local/lib/node_modules
-        sudo rm -rf /usr/local/share/boost
-        sudo rm -rf /usr/local/graalvm
-        sudo rm -rf /usr/share/az_*
-        sudo rm -rf /usr/share/miniconda
-        sudo rm -rf /usr/share/gradle*
-        sudo rm -rf /usr/share/cmake*
-        sudo rm -rf /var/lib/docker
-        sudo rm -rf /var/lib/containerd
-        sudo rm -rf /tmp/*
-        sudo rm -rf /var/tmp/*
-        sudo apt-get clean
-        sudo apt-get autoremove -y || true
-        echo "===== 清理后磁盘状态 ====="
-        df -hT
 
     - name: 检出代码
       uses: actions/checkout@v4
@@ -122,6 +93,13 @@ jobs:
         sudo timedatectl set-timezone "$TZ"
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
+
+    - name: 强制清理磁盘
+      run: |
+        sudo rm -rf /mnt/*
+        sudo rm -rf /opt/*
+        sudo rm -rf /usr/local/*
+        df -hT
 
     - name: 克隆源代码
       run: |
