@@ -56,13 +56,15 @@ jobs:
     - name: 最大化构建空间
       uses: easimon/maximize-build-space@master
       with:
-        root-reserve-mb: 2048
-        swap-size-mb: 8192
+        root-reserve-mb: 1024
+        swap-size-mb: 4096
         remove-dotnet: 'true'
         remove-android: 'true'
         remove-haskell: 'true'
         remove-codeql: 'true'
         remove-docker-images: 'true'
+        remove-large-packages: 'true'
+        overprovision-lvm: 'true'
 
     - name: 检出代码
       uses: actions/checkout@v4
@@ -94,11 +96,24 @@ jobs:
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
 
-    - name: 强制清理磁盘
+    - name: 额外清理磁盘空间
       run: |
-        sudo rm -rf /mnt/*
-        sudo rm -rf /opt/*
-        sudo rm -rf /usr/local/*
+        echo "===== 清理前磁盘情况 ====="
+        df -hT
+        # 删除更多不需要的东西
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /opt/ghc
+        sudo rm -rf /opt/hostedtoolcache
+        sudo rm -rf /usr/local/share/boost
+        sudo rm -rf /usr/share/swift
+        sudo rm -rf /usr/local/.ghcup
+        sudo rm -rf /usr/lib/jvm
+        sudo docker system prune -af || true
+        # 清理 apt 缓存
+        sudo apt-get clean
+        sudo rm -rf /var/lib/apt/lists/*
+        echo "===== 清理后磁盘情况 ====="
         df -hT
 
     - name: 克隆源代码
@@ -172,7 +187,7 @@ jobs:
       run: |
         cd openwrt
         echo -e "$(nproc) thread compile"
-        make -j$(nproc) || make -j1 || make -j1 V=s
+        make -j$(($(nproc)/2)) || make -j2 || make -j1 V=s
         echo "status=success" >> $GITHUB_OUTPUT
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
