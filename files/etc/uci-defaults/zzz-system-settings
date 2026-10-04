@@ -11,18 +11,27 @@ uci add_list system.ntp.server='time.apple.com'
 uci add_list system.ntp.server='time.windows.com'
 uci commit system
 
-# 强制 iStore 前端显示中文
+# LuCI 默认语言
+uci -q set luci.main.lang='zh_cn'
+uci -q commit luci
+
+# iStore 前端语言（UCI）
+uci -q set istore.istore.istore_vue_lang='zh-cn'
+uci -q commit istore
+
+# ========== 强制 iStore 前端显示中文（增强版 + 日志） ==========
 if [ -f /www/luci-static/istore/i18n/zh-cn.json ]; then
-    echo "Forcing iStore Chinese..." >> /tmp/zzz-istore.log
+    echo "$(date) - Forcing iStore Chinese..." >> /tmp/zzz-istore.log
     sed 's/"zh-cn":/"en":/' /www/luci-static/istore/i18n/zh-cn.json > /tmp/en-forced.json 2>> /tmp/zzz-istore.log
     if [ -s /tmp/en-forced.json ]; then
         cp -f /tmp/en-forced.json /www/luci-static/istore/i18n/en.json 2>> /tmp/zzz-istore.log
-        echo "iStore en.json forced successfully" >> /tmp/zzz-istore.log
+        echo "$(date) - iStore en.json forced successfully" >> /tmp/zzz-istore.log
+        ls -l /www/luci-static/istore/i18n/en.json >> /tmp/zzz-istore.log
     else
-        echo "sed failed, en-forced.json empty" >> /tmp/zzz-istore.log
+        echo "$(date) - sed failed, en-forced.json empty or missing" >> /tmp/zzz-istore.log
     fi
 else
-    echo "zh-cn.json not found" >> /tmp/zzz-istore.log
+    echo "$(date) - zh-cn.json not found" >> /tmp/zzz-istore.log
 fi
 
 # ========== Netdata 强制启用 ==========
