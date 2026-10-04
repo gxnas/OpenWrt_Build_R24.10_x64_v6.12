@@ -181,7 +181,8 @@ jobs:
 
     - name: 设置 zzz-system-settings 权限
       run: |
-        chmod +x $GITHUB_WORKSPACE/files/etc/uci-defaults/zzz-system-settings
+        ls -ah
+        chmod +x files/etc/uci-defaults/zzz-system-settings
 
     - name: 编译前检查磁盘使用情况
       if: (!cancelled())
