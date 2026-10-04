@@ -24,13 +24,13 @@ function git_sparse_clone() {
 sed -i '/helloworld/d' feeds.conf.default
 sed -i '/small/d' feeds.conf.default
 sed -i '/passwall/d' feeds.conf.default
+sed -i '/istore /d' feeds.conf.default
 sed -i '2i src-git small https://github.com/kenzok8/small' feeds.conf.default
 sed -i '$a src-git helloworld https://github.com/fw876/helloworld' feeds.conf.default
 sed -i '$a src-git passwall_packages https://github.com/Openwrt-Passwall/openwrt-passwall-packages.git;main' feeds.conf.default
 sed -i '$a src-git passwall_luci https://github.com/Openwrt-Passwall/openwrt-passwall.git;main' feeds.conf.default
 sed -i '$a src-git openclaw https://github.com/10000ge10000/luci-app-openclaw.git;main' feeds.conf.default
-sed -i '/src-git istore /d' feeds.conf.default
-echo 'src-git istore https://github.com/linkease/istore;main' >> feeds.conf.default
+sed -i '$a src-git istore https://github.com/linkease/istore;main' feeds.conf.default
 
 # 添加常用插件
 git clone --depth=1 https://github.com/kongfl888/luci-app-adguardhome package/luci-app-adguardhome
