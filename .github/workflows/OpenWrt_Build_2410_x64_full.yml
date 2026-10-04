@@ -35,18 +35,25 @@ jobs:
     steps:
     - name: 检查服务器性能
       run: |
-        echo "警告⚠"
-        echo "分配的服务器性能有限，若选择的插件过多，务必注意CPU性能！"
-        echo -e "已知CPU型号(降序): 7763，8370C，8272CL，8171M，E5-2673\n"
+        echo "警告⚠ 分配的服务器性能有限，若选择的插件过多，务必注意CPU性能！"
+        echo -e "已知常见CPU型号（按照性能降序排名）:"
+        echo "  • AMD EPYC 9V45（96核 / 192线程）"
+        echo "  • AMD EPYC 9V74（80核 / 160线程）"
+        echo "  • AMD EPYC 7763（64核 / 128线程）"
+        echo "  • Intel Xeon Platinum 8370C / 8272CL"
+        echo "  • Intel Xeon Platinum 8171M"
+        echo "  • Intel Xeon E5-2673 v3/v4"
+        echo ""
         echo "--------------------------CPU信息--------------------------"
         echo "CPU物理数量: $(cat /proc/cpuinfo | grep "physical id" | sort | uniq | wc -l)"
-        echo "CPU核心数量: $(nproc)"
-        echo -e "CPU型号信息:$(cat /proc/cpuinfo | grep -m1 name | awk -F: '{print $2}')\n"
+        echo "CPU逻辑核心: $(nproc)"
+        echo -e "CPU型号信息: $(cat /proc/cpuinfo | grep -m1 'model name' | awk -F: '{print $2}' | xargs)\n"
         echo "--------------------------内存信息--------------------------"
         echo "已安装内存详细信息:"
-        echo -e "$(sudo lshw -short -C memory | grep GiB)\n"
+        echo -e "$(sudo lshw -short -C memory 2>/dev/null | grep -E 'GiB|system' || free -h)\n"
         echo "--------------------------硬盘信息--------------------------"
-        echo "硬盘数量: $(ls /dev/sd* | grep -v [1-9] | wc -l)" && df -hT
+        echo "硬盘数量: $(ls /dev/sd* 2>/dev/null | grep -v '[0-9]$' | wc -l || echo 0)"
+        df -hT
 
     - name: 最大化构建空间
       uses: easimon/maximize-build-space@master
@@ -58,7 +65,7 @@ jobs:
         remove-haskell: 'true'
         remove-codeql: 'true'
         remove-docker-images: 'true'
-        
+
     - name: 检出代码
       uses: actions/checkout@v4
 
@@ -66,48 +73,64 @@ jobs:
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
-        sudo rm -rf /etc/apt/sources.list.d
-        #sudo bash -c "curl -skL https://raw.githubusercontent.com/sbwml/actions/openwrt-build-setup/sources-24.04.list > /etc/apt/sources.list"
         sudo rm -rf /etc/apt/sources.list.d/*
         sudo bash -c 'cat > /etc/apt/sources.list <<EOF
-        deb https://mirrors.aliyun.com/ubuntu/ noble main restricted universe multiverse
-        deb https://mirrors.aliyun.com/ubuntu/ noble-updates main restricted universe multiverse
-        deb https://mirrors.aliyun.com/ubuntu/ noble-backports main restricted universe multiverse
-        deb https://mirrors.aliyun.com/ubuntu/ noble-security main restricted universe multiverse
+        deb http://archive.ubuntu.com/ubuntu/ noble main restricted universe multiverse
+        deb http://archive.ubuntu.com/ubuntu/ noble-updates main restricted universe multiverse
+        deb http://archive.ubuntu.com/ubuntu/ noble-backports main restricted universe multiverse
+        deb http://security.ubuntu.com/ubuntu/ noble-security main restricted universe multiverse
         EOF'
-        sudo -E apt-get update -y || sudo -E apt-get update -y || sudo -E apt-get update -y
-        sudo rm -rf /etc/apt/sources.list.d* /usr/local/lib/android* /etc/docker* /etc/firefox* /etc/mysql* /etc/php* /opt/google* /usr/share/dotnet* /usr/share/google* /usr/share/moby* /usr/share/mysql* /usr/share/php*
         sudo -E apt-get -qq update
-        sudo -E apt-get -y purge azure* docker* dotnet* firefox* ghc* google* llvm* mongodb* mysql* php* powershell* snap* gfortran* microsoft-edge-stable
-        sudo -E apt-get -qq install $(curl -fsSL raw.githubusercontent.com/Lai-xi/Actions-Lede_x86/main/run)
+        sudo -E apt-get -y -qq purge azure* docker* dotnet* firefox* ghc* google* llvm* mongodb* mysql* php* powershell* snap* gfortran* microsoft-edge-stable || true
+        sudo -E apt-get -y -qq install \
+          ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 ccache \
+          clang cmake cpio curl device-tree-compiler flex gawk gcc-multilib g++-multilib gettext genisoimage \
+          git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev libgmp3-dev \
+          libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev libreadline-dev \
+          libssl-dev libtool llvm lrzsz libnsl-dev ninja-build p7zip p7zip-full patch pkgconf python3 \
+          python3-pip python3-ply python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools \
+          subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev file jq rename coreutils scdoc
         sudo -E apt-get -qq autoremove --purge
         sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
 
-    - name: 强制清理磁盘
+    - name: 额外清理磁盘空间
       run: |
-        sudo rm -rf /mnt/*
-        sudo rm -rf /opt/*
-        sudo rm -rf /usr/local/*
+        echo "===== 清理前磁盘情况 ====="
+        df -hT
+        # 删除更多不需要的东西
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /opt/ghc
+        sudo rm -rf /opt/hostedtoolcache
+        sudo rm -rf /usr/local/share/boost
+        sudo rm -rf /usr/share/swift
+        sudo rm -rf /usr/local/.ghcup
+        sudo rm -rf /usr/lib/jvm
+        sudo docker system prune -af || true
+        # 清理 apt 缓存
+        sudo apt-get clean
+        sudo rm -rf /var/lib/apt/lists/*
+        echo "===== 清理后磁盘情况 ====="
         df -hT
 
     - name: 克隆源代码
-      # working-directory: $GITHUB_WORKSPACE
       run: |
-        df -hT $PWD
-        git clone --single-branch --depth=1 --filter=blob:none $REPO_URL -b $REPO_BRANCH $GITHUB_WORKSPACE/openwrt
-        echo "OPENWRT_PATH=$GITHUB_WORKSPACE/openwrt" >> $GITHUB_ENV
+        df -hT
+        git clone --single-branch --depth=1 --filter=blob:none $REPO_URL -b $REPO_BRANCH /workdir/openwrt
+        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
+        echo "OPENWRT_PATH=/workdir/openwrt" >> $GITHUB_ENV
 
     - name: 生成变量
       run: |
         [ -e $CONFIG_FILE ] && cp $CONFIG_FILE openwrt/.config
         SOURCE_REPO="$(echo $REPO_URL | awk -F '/' '{print $(NF)}')"
         echo "SOURCE_REPO=$SOURCE_REPO" >> $GITHUB_ENV
-        DEVICE_TARGET=$(cat openwrt/.config | grep CONFIG_TARGET_BOARD | awk -F '"' '{print $2}')
+        DEVICE_TARGET=$(grep CONFIG_TARGET_BOARD openwrt/.config | awk -F '"' '{print $2}')
         echo "DEVICE_TARGET=$DEVICE_TARGET" >> $GITHUB_ENV
-        DEVICE_SUBTARGET=$(cat openwrt/.config | grep CONFIG_TARGET_SUBTARGET | awk -F '"' '{print $2}')
+        DEVICE_SUBTARGET=$(grep CONFIG_TARGET_SUBTARGET openwrt/.config | awk -F '"' '{print $2}')
         echo "DEVICE_SUBTARGET=$DEVICE_SUBTARGET" >> $GITHUB_ENV
 
     - name: 加载自定义软件源
@@ -135,6 +158,9 @@ jobs:
         chmod +x $DIY_P2_SH
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
+        # 强制开启 ccache（配合 cachewrtbuild）
+        echo -e "CONFIG_DEVEL=y\nCONFIG_CCACHE=y" >> .config
+        make defconfig
 
     - name: 缓存工具链
       if: env.CACHE_TOOLCHAIN == 'true'
@@ -148,8 +174,7 @@ jobs:
       id: package
       run: |
         cd openwrt
-        make defconfig
-        make download -j8
+        make download -j$(nproc)
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
 
@@ -162,7 +187,7 @@ jobs:
       run: |
         cd openwrt
         echo -e "$(nproc) thread compile"
-        make -j$(nproc) || make -j1 || make -j1 V=s
+        make -j$(($(nproc)/2)) || make -j2 || make -j1 V=s
         echo "status=success" >> $GITHUB_OUTPUT
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
@@ -174,12 +199,11 @@ jobs:
         echo "=========================================="
         echo "----------------空间使用-------------------"
         echo "=========================================="
-        echo "系统空间       类型   总数  已用  可用 使用率"
         df -hT
         echo "=========================================="
-        du -h --max-depth=1 openwrt/ --exclude=build_dir --exclude=bin
-        du -h --max-depth=1 openwrt/build_dir
-        du -h --max-depth=1 openwrt/bin
+        du -h --max-depth=1 openwrt/ --exclude=build_dir --exclude=bin || true
+        du -h --max-depth=1 openwrt/build_dir || true
+        du -h --max-depth=1 openwrt/bin || true
 
     - name: 上传 bin 目录
       uses: actions/upload-artifact@v4
@@ -193,56 +217,58 @@ jobs:
       if: steps.compile.outputs.status == 'success' && !cancelled()
       run: |
         cd openwrt/bin/targets/*/*
-        echo "KERNEL=$(cat *.manifest | grep ^kernel | cut -d- -f2 | tr -d ' ')" >> $GITHUB_ENV
-        mv openwrt-x86-64-generic-squashfs-combined.img.gz ${{ env.FILE_NAME }}-${{ env.FILE_DATE }}-bios.img.gz
-        mv openwrt-x86-64-generic-squashfs-combined-efi.img.gz ${{ env.FILE_NAME }}-${{ env.FILE_DATE }}-uefi.img.gz
-        rm -rf config.buildinfo
-        rm -rf feeds.buildinfo
-        rm -rf openwrt-x86-64-generic-kernel.bin
-        rm -rf openwrt-x86-64-generic-squashfs-rootfs.img.gz
-        rm -rf openwrt-x86-64-generic.manifest
-        rm -rf profiles.json
-        rm -rf version.buildinfo
-        rm -rf sha256sums
-        rm -rf packages
+        echo "KERNEL=$(cat *.manifest 2>/dev/null | grep ^kernel | cut -d- -f2 | tr -d ' ' || echo 'unknown')" >> $GITHUB_ENV
+        # 重命名主固件
+        if [ -f openwrt-x86-64-generic-squashfs-combined-efi.img.gz ]; then
+          mv openwrt-x86-64-generic-squashfs-combined-efi.img.gz ${{ env.FILE_NAME }}-${{ env.FILE_DATE }}-uefi.img.gz
+        fi
+        if [ -f openwrt-x86-64-generic-squashfs-combined.img.gz ]; then
+          mv openwrt-x86-64-generic-squashfs-combined.img.gz ${{ env.FILE_NAME }}-${{ env.FILE_DATE }}.img.gz
+        fi
+        # 清理不需要的文件
+        rm -rf config.buildinfo feeds.buildinfo openwrt-x86-64-generic-kernel.bin \
+               openwrt-x86-64-generic-squashfs-rootfs.img.gz \
+               openwrt-x86-64-generic.manifest profiles.json version.buildinfo sha256sums packages || true
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 上传固件目录
       uses: actions/upload-artifact@v4
-      if: ${{ env.UPLOAD_FIRMWARE == 'true' && steps.organize.outputs.status == 'success' && !cancelled() }}
+      if: env.UPLOAD_FIRMWARE == 'true' && steps.organize.outputs.status == 'success' && !cancelled()
       with:
         name: ${{ env.FILE_NAME }}-${{ env.KERNEL }}-${{ env.FILE_DATE }}
         path: ${{ env.FIRMWARE }}
 
     - name: 生成发布标签
       id: tag
-      if: ${{ env.UPLOAD_RELEASE == 'true' && steps.organize.outputs.status == 'success' && !cancelled() }}
+      if: env.UPLOAD_RELEASE == 'true' && steps.organize.outputs.status == 'success' && !cancelled()
       run: |
-        : > "$GITHUB_OUTPUT"  # 清空旧输出，避免重复触发旧变量
+        : > "$GITHUB_OUTPUT"
         release_tag=$(date +"%Y.%m.%d-%H.%M")
         release_date=$(date +"%Y-%m-%d %H:%M")
         echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
         echo "release_date=$release_date" >> "$GITHUB_OUTPUT"
         echo "status=success" >> "$GITHUB_OUTPUT"
-        # 🔽 添加发布页说明
-        echo "  ### 📒 固件信息 📒 ###  " >> release.txt
-        echo "🎯 固件名称: ${{ env.FILE_NAME }}" > release.txt
-        echo "📅 编译时间: $release_date" >> release.txt
-        echo "⚙️ 构建配置: $CONFIG_FILE" >> release.txt
-        echo "💻 平台架构: x86_64 " >> release.txt
-        echo "🧱 固件源码: ${{ env.REPO_URL }} " >> release.txt
-        echo "💝 源码分支: ${{ env.REPO_BRANCH }} " >> release.txt
-        echo "🚀 内核版本: ${{ env.KERNEL }} " >> release.txt
-        echo "🌐 默认地址：192.168.18.1 " >> release.txt
-        echo "🧑‍💼 默认账号：root " >> release.txt
-        echo "🔑 默认密码：无密码 " >> release.txt
-        echo "----------------------------------------" >> release.txt
-        echo "⚽ 编译日志请查看 Actions 构建详情" >> release.txt
+
+        cat > release.txt << EOF
+        ### 📒 固件信息 📒 ###
+        🎯 固件名称: ${{ env.FILE_NAME }}
+        📅 编译时间: $release_date
+        ⚙️ 构建配置: $CONFIG_FILE
+        💻 平台架构: x86_64
+        🧱 固件源码: ${{ env.REPO_URL }}
+        💝 源码分支: ${{ env.REPO_BRANCH }}
+        🚀 内核版本: ${{ env.KERNEL }}
+        🌐 默认地址：192.168.1.11
+        🧑‍💼 默认账号：root
+        🔑 默认密码：无密码
+        ----------------------------------------
+        ⚽ 编译日志请查看 Actions 构建详情
+        EOF
 
     - name: 上传固件至Release
-      uses: softprops/action-gh-release@v3
-      if: ${{ env.UPLOAD_RELEASE == 'true' && steps.tag.outputs.status == 'success' && !cancelled() }}
+      uses: softprops/action-gh-release@v2
+      if: env.UPLOAD_RELEASE == 'true' && steps.tag.outputs.status == 'success' && !cancelled()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
