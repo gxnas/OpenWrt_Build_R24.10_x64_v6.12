@@ -41,6 +41,7 @@ git clone --depth=1 https://github.com/sirpdboy/luci-app-netdata package/luci-ap
 git clone --depth=1 https://github.com/destan19/OpenAppFilter.git package/OpenAppFilter
 git clone --depth=1 https://github.com/sirpdboy/luci-app-poweroffdevice.git package/luci-app-poweroffdevice
 git clone --depth=1 https://github.com/EasyTier/luci-app-easytier.git package/luci-app-easytier
+git clone --depth=1 https://github.com/tokisaki-galaxy/luci-app-tailscale-community.git package/luci-app-tailscale-community
 
 # 移除 openwrt feeds 自带的核心库（避免版本冲突）
 rm -rf feeds/packages/net/{xray-core,v2ray-geodata,sing-box,chinadns-ng,dns2socks,hysteria,ipt2socks,microsocks,naiveproxy,shadowsocks-libev,shadowsocks-rust,shadowsocksr-libev,simple-obfs,tcping,trojan-plus,tuic-client,v2ray-plugin,xray-plugin,geoview,shadow-tls}
