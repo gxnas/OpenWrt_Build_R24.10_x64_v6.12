@@ -43,9 +43,11 @@ git clone https://github.com/sirpdboy/luci-app-poweroffdevice.git package/luci-a
 sed -i '/src-git istore /d' feeds.conf.default
 echo 'src-git istore https://github.com/linkease/istore;main' >> feeds.conf.default
 
-# 替换 MosDNS v5
+# MosDNS v5 插件
 rm -rf feeds/packages/lang/golang
-git clone https://github.com/sbwml/packages_lang_golang -b 26.x feeds/packages/lang/golang
+git clone --depth=1 https://github.com/sbwml/packages_lang_golang -b 26.x feeds/packages/lang/golang
 rm -rf feeds/packages/net/v2ray-geodata
-git clone https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns
-git clone https://github.com/sbwml/v2ray-geodata package/v2ray-geodata
+rm -rf package/mosdns package/v2ray-geodata
+git clone --depth=1 https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns
+git clone --depth=1 https://github.com/sbwml/v2ray-geodata package/v2ray-geodata
+
