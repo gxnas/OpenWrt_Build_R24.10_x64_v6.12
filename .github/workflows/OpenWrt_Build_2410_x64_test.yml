@@ -179,6 +179,10 @@ jobs:
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
 
+    - name: 设置 zzz-system-settings 权限
+      run: |
+        chmod +x $GITHUB_WORKSPACE/files/etc/uci-defaults/zzz-system-settings
+
     - name: 编译前检查磁盘使用情况
       if: (!cancelled())
       run: df -hT
@@ -193,6 +197,12 @@ jobs:
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
         echo "FILE_DATE=$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
+
+    - name: 检查 zzz-system-settings 和 istore 的日志
+      run: |
+        cat /tmp/zzz-istore.log
+        ls -l /www/luci-static/istore/i18n/
+        head -c 100 /www/luci-static/istore/i18n/en.json
 
     - name: 编译后检查磁盘使用情况
       if: (!cancelled())
