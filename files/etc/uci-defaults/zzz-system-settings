@@ -11,11 +11,11 @@ uci add_list system.ntp.server='time.apple.com'
 uci add_list system.ntp.server='time.windows.com'
 uci commit system
 
-# iStore 前端语言[让 i18n.translate("istore_vue_lang") 返回 zh-cn]
-mkdir -p /usr/lib/lua/luci/i18n
-cat > /tmp/istore_vue_lang.zh-cn.lua << 'EOF'
-istore_vue_lang = "zh-cn"
-EOF
+# 强制 iStore 前端显示中文
+if [ -f /www/luci-static/istore/i18n/zh-cn.json ]; then
+    sed 's/"zh-cn":/"en":/' /www/luci-static/istore/i18n/zh-cn.json > /tmp/en-forced.json 2>/dev/null
+    [ -s /tmp/en-forced.json ] && mv /tmp/en-forced.json /www/luci-static/istore/i18n/en.json
+fi
 
 # ========== Netdata 强制启用 ==========
 [ -f /etc/config/netdata ] || touch /etc/config/netdata
