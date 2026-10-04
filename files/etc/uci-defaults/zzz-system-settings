@@ -13,8 +13,16 @@ uci commit system
 
 # 强制 iStore 前端显示中文
 if [ -f /www/luci-static/istore/i18n/zh-cn.json ]; then
-    sed 's/"zh-cn":/"en":/' /www/luci-static/istore/i18n/zh-cn.json > /tmp/en-forced.json 2>/dev/null
-    [ -s /tmp/en-forced.json ] && mv /tmp/en-forced.json /www/luci-static/istore/i18n/en.json
+    echo "Forcing iStore Chinese..." >> /tmp/zzz-istore.log
+    sed 's/"zh-cn":/"en":/' /www/luci-static/istore/i18n/zh-cn.json > /tmp/en-forced.json 2>> /tmp/zzz-istore.log
+    if [ -s /tmp/en-forced.json ]; then
+        cp -f /tmp/en-forced.json /www/luci-static/istore/i18n/en.json 2>> /tmp/zzz-istore.log
+        echo "iStore en.json forced successfully" >> /tmp/zzz-istore.log
+    else
+        echo "sed failed, en-forced.json empty" >> /tmp/zzz-istore.log
+    fi
+else
+    echo "zh-cn.json not found" >> /tmp/zzz-istore.log
 fi
 
 # ========== Netdata 强制启用 ==========
