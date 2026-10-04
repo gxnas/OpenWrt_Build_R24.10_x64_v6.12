@@ -166,7 +166,7 @@ jobs:
       uses: HiGarfield/cachewrtbuild@main
       with:
         ccache: true
-        mixkey: ${{ env.SOURCE_REPO }}-${{ env.REPO_BRANCH }}-${{ env.DEVICE_TARGET }}-${{ env.DEVICE_SUBTARGET }}
+        mixkey: ${{ env.FILE_NAME }}-${{ env.KERNEL }}-Caches-${{ env.DEVICE_SUBTARGET }}
         prefix: ${{ env.OPENWRT_PATH }}
 
     - name: 下载软件包
