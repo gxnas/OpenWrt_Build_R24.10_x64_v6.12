@@ -178,6 +178,7 @@ jobs:
         find dl -size -1024c -exec rm -f {} \;
 
     - name: 设置 zzz-system-settings 权限
+      working-directory: ${{ github.workspace }}
       run: |
         ls -ah
         chmod +x files/etc/uci-defaults/zzz-system-settings
