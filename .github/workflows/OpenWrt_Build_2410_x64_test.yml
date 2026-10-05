@@ -95,8 +95,11 @@ jobs:
         sudo -E apt-get -qq autoremove --purge
         sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
-        sudo mkdir -p /workdir
-        sudo chown $USER:$GROUPS /workdir
+
+        # 把 /workdir 放到 maximize-build-space 腾出的大空间上
+        sudo mkdir -p $GITHUB_WORKSPACE/workdir
+        sudo ln -sfn $GITHUB_WORKSPACE/workdir /workdir
+        sudo chown -R $USER:$USER /workdir
 
     - name: 额外清理磁盘空间
       run: |
@@ -189,7 +192,7 @@ jobs:
       run: |
         cd openwrt
         echo -e "$(nproc) thread compile"
-        make -j$(($(nproc)/2)) || make -j2 || make -j1 V=s
+        make -j$(($(nproc)/2)) V=s || make -j1 V=s
         echo "status=success" >> $GITHUB_OUTPUT
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
