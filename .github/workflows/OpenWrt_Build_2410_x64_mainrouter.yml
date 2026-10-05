@@ -127,6 +127,30 @@ jobs:
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
         echo "OPENWRT_PATH=/workdir/openwrt" >> $GITHUB_ENV
 
+    - name: 缓存 OpenWrt 下载文件
+      continue-on-error: true
+      uses: actions/cache@v4
+      with:
+        path: |
+          openwrt/dl
+          !openwrt/dl/linux-*.tar.*
+          !openwrt/dl/gcc-*.tar.*
+          !openwrt/dl/binutils-*.tar.*
+          !openwrt/dl/musl-*.tar.*
+          !openwrt/dl/glibc-*.tar.*
+          !openwrt/dl/rustc-*.tar.*
+          !openwrt/dl/cargo-*.tar.*
+          !openwrt/dl/go*.tar.*
+          !openwrt/dl/golang-*.tar.*
+          !openwrt/dl/cmake-*.tar.*
+          !openwrt/dl/llvm-*.tar.*
+          !openwrt/dl/clang-*.tar.*
+          !openwrt/dl/node-v*.tar.*
+        key: ${{ github.workflow }}-${{ env.KERNEL }}-dl-slim-${{ hashFiles(env.CONFIG_FILE) }}
+        restore-keys: |
+          ${{ github.workflow }}-${{ env.KERNEL }}-dl-slim
+          ${{ github.workflow }}-${{ env.KERNEL }}-dl
+
     - name: 生成变量
       run: |
         [ -e $CONFIG_FILE ] && cp $CONFIG_FILE openwrt/.config
@@ -171,7 +195,7 @@ jobs:
       uses: HiGarfield/cachewrtbuild@main
       with:
         ccache: true
-        mixkey: ${{ env.FILE_NAME }}-${{ env.KERNEL }}-Caches-${{ env.DEVICE_SUBTARGET }}
+        mixkey: ${{ github.workflow }}-${{ env.KERNEL }}-CACHE_TOOLCHAIN
         prefix: ${{ env.OPENWRT_PATH }}
 
     - name: 下载软件包
