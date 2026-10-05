@@ -95,10 +95,8 @@ jobs:
         sudo -E apt-get -qq autoremove --purge
         sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
-
-        # 把 /workdir 放到 maximize-build-space 腾出的大空间上
-        sudo mkdir -p $GITHUB_WORKSPACE/workdir
-        sudo ln -sfn $GITHUB_WORKSPACE/workdir /workdir
+        sudo mkdir -p $GITHUB_WORKSPACE/workdir /workdir
+        sudo mount --bind $GITHUB_WORKSPACE/workdir /workdir
         sudo chown -R $USER:$USER /workdir
 
     - name: 额外清理磁盘空间
