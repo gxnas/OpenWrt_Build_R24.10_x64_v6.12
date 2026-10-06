@@ -41,6 +41,7 @@ jobs:
         echo "  • AMD EPYC 9V74（96C/192T）"
         echo "  • AMD EPYC 9V45（64C/128T）"
         echo "  • AMD EPYC 7763（64C/128T）"
+        echo "  • Intel Xeon Platinum 8573C（56C/112T）"
         echo "  • Intel Xeon Platinum 8370C（52C/104T）"
         echo "  • Intel Xeon Platinum 8272CL（26C/52T）"
         echo "  • Intel Xeon Platinum 8171M（26C/52T）"
