@@ -192,6 +192,13 @@ jobs:
       id: package
       run: |
         cd openwrt
+        # Go 包默认 GOPROXY=off，只认 dl/go-mod-cache；缓存残缺时会报 undefined: Syscall 等
+        rm -rf dl/go-mod-cache
+        if [ -f feeds/packages/lang/golang/golang-package.mk ]; then
+          sed -i 's|GOPROXY=off|GOPROXY=https://proxy.golang.org,direct|g' feeds/packages/lang/golang/golang-package.mk
+        fi
+        export GOPROXY=https://proxy.golang.org,direct
+        export GOSUMDB=sum.golang.org
         make download -j$(nproc)
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
