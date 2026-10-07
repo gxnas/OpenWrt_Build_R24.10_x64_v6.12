@@ -21,7 +21,7 @@ env:
   PRODUCT_NAME: x86_64
   CACHE_TOOLCHAIN: true
   UPLOAD_BIN_DIR: false
-  UPLOAD_FIRMWARE: false
+  UPLOAD_FIRMWARE: true
   UPLOAD_RELEASE: true
   TELEGRAM_WORK_PUSH: true
   WECHAT_WORK_PUSH: true
@@ -211,7 +211,10 @@ jobs:
       run: |
         cd openwrt
         echo -e "$(nproc) thread compile"
-        make -j$(nproc) || make -j1 || make -j1 V=s
+        export GOPROXY=https://proxy.golang.org,direct
+        export GOSUMDB=sum.golang.org
+        # 禁止失败后改成 -j1：单线程会把剩余时间烧光，触达 GitHub 6h 上限后 Release 来不及上传
+        make -j$(nproc) || make -j$(nproc) V=s
         echo "status=success" >> $GITHUB_OUTPUT
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
@@ -298,6 +301,8 @@ jobs:
         tag_name: ${{ steps.tag.outputs.release_tag }}
         body_path: release.txt
         files: ${{ env.FIRMWARE }}/*
+        fail_on_unmatched_files: false
+        make_latest: true
 
     - name: 编译成功，发Telegram通知
       if: success() && env.TELEGRAM_WORK_PUSH == 'true'
