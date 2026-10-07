@@ -113,5 +113,32 @@ exit 0
 EOF
 chmod +x package/base-files/files/etc/uci-defaults/99-luci
 
+
+# 修复 luci-app-tailscale-community 前端 JS：
+# master 源码在 'use strict' 下未声明 lastDevicesStatus / peerTableHeaders，打开页面会 ReferenceError
+fix_JS=$(find package feeds -path '*/luci-static/resources/view/tailscale.js' 2>/dev/null | head -1)
+if [ -n "$TS_JS" ] && [ -f "$TS_JS" ]; then
+  # 压缩或非压缩均可：在 let map; 后补声明
+  if ! grep -q 'let lastDevicesStatus' "$TS_JS"; then
+    sed -i 's/let map;/let map;let lastDevicesStatus=null;/' "$TS_JS"
+  fi
+  if ! grep -qE 'const peerTableHeaders|let peerTableHeaders|var peerTableHeaders' "$TS_JS"; then
+    # 插在 let map 之后（若已有 lastDevicesStatus 则跟在其后逻辑由第一次 sed 保证 map 仍在）
+    if grep -q 'let lastDevicesStatus=null;' "$TS_JS"; then
+      sed -i 's/let lastDevicesStatus=null;/let lastDevicesStatus=null;const peerTableHeaders=[{text:_("Status")},{text:_("Hostname")},{text:_("IP")},{text:_("OS")},{text:_("Connection")},{text:_("RX"),style:"text-align:right;"},{text:_("TX"),style:"text-align:right;"},{text:_("Last Seen")}];/' "$TS_JS"
+    else
+      sed -i 's/let map;/let map;const peerTableHeaders=[{text:_("Status")},{text:_("Hostname")},{text:_("IP")},{text:_("OS")},{text:_("Connection")},{text:_("RX"),style:"text-align:right;"},{text:_("TX"),style:"text-align:right;"},{text:_("Last Seen")}];/' "$TS_JS"
+    fi
+  fi
+  if grep -q 'let lastDevicesStatus' "$TS_JS" && grep -qE 'const peerTableHeaders|let peerTableHeaders' "$TS_JS"; then
+    echo "已修复 tailscale.js：lastDevicesStatus + peerTableHeaders"
+  else
+    echo "警告：tailscale.js 补丁可能未完全生效，请检查 $TS_JS"
+  fi
+else
+  echo "未找到 tailscale.js，跳过 Tailscale 前端补丁"
+fi
+
+
 echo "========================="
 echo " DIY2 配置完成……"
